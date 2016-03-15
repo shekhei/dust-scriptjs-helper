@@ -6,6 +6,7 @@ env:
   - CXX=g++-4.8
 install:
   - npm install -g codecov
+  - npm install -g babel-cli
   - npm install dustjs-linkedin dustjs-helpers
 script:
   - npm test
