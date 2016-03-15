@@ -1,13 +1,21 @@
 language: node_js
 node_js:
   - "5"
-  - "4.1"
-  - "4.0"
+  - "4"
 env:
   - CXX=g++-4.8
+install:
+  - npm install -g codecov
+  - npm install dustjs-linkedin dustjs-helpers
+script:
+  - npm test
+  - codecov
 addons:
   apt:
     sources:
       - ubuntu-toolchain-r-test
     packages:
       - g++-4.8
+  code_climate:
+    repo_token: 4c3d3b14a544b2fbd7ec93c32a088807466bb578eff6dca7be7b8a995ca570dc
+

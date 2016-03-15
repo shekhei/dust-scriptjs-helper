@@ -1,6 +1,6 @@
 import {default as chai, expect} from "chai";
 import {default as asPromised} from "chai-as-promised"
-import {default as GraphNode} from "../dist/graph.js"
+import {default as GraphNode} from "../src/graph.js"
 chai.use(asPromised);
 
 

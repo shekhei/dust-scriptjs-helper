@@ -1,6 +1,6 @@
 import {default as chai, expect} from "chai";
 import {default as asPromised} from "chai-as-promised"
-import {default as Queue} from "../dist/queue.js"
+import {default as Queue} from "../src/queue.js"
 chai.use(asPromised);
 
 

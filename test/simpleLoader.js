@@ -1,7 +1,7 @@
 import {default as chai, expect} from "chai";
 // import * as dust from "dustjs-linkedin";
 import {default as glob} from "glob";
-import * as dust from "../dist";
+import * as dust from "../src";
 import * as fs from "fs";
 import {default as asPromised} from "chai-as-promised"
 chai.use(asPromised);
