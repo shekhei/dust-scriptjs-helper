@@ -6,7 +6,7 @@
   "scripts": {
     "build": "cd src; ../node_modules/.bin/babel ./*.js -d ../dist",
     "prepublish": "npm run build",
-    "test": "babel-node ./node_modules/.bin/babel-istanbul cover _mocha -- --compilers js:babel-register"
+    "test": "./node_modules/.bin/babel-node ./node_modules/.bin/babel-istanbul cover _mocha -- --compilers js:babel-register"
   },
   "repository": {
     "type": "git",
