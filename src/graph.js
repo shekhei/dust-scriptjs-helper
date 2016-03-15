@@ -28,17 +28,16 @@ export default class DepGraphNode {
   breadth(direction, fn, visited) {
     debug('starting breadth');
     if ( direction !== 'out' && direction !== 'in') {
-      throw "direction can only be in or out";
+      throw new Error("direction can only be in or out");
     }
     var queue = new Queue();
     if ( visited === undefined ) {
       visited = {}; // using a map, easier to handle for all the ids
     }
-    if ( visited[this._id] === true ) {
-      return;
+    if ( visited[this._id] !== true ) {
+      queue.enqueue(this);
+      visited[this._id] = true;
     }
-    visited[this._id] = true;
-    queue.enqueue(this);
     var path = []; // this is to be used for building the script, lets hope the graphs doesnt get too large :P
     while ( !queue.isEmpty() ) {
       var self = queue.dequeue();

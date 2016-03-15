@@ -58,6 +58,34 @@ describe("Queue", function() {
     expect(queue.isEmpty()).to.be.true;
     done();
   })
+
+  it('should support enqueuing by an array', function(done){
+    var queue = new Queue();
+    expect(queue.isEmpty()).to.be.true;
+    queue.enqueue(1);
+    expect(queue.dequeue()).to.eql(1);
+    queue.enqueue([2,3]);
+    expect(queue.dequeue()).to.eql(2);
+    queue.enqueue(4);
+    expect(queue.dequeue()).to.eql(3);
+    expect(queue.dequeue()).to.eql(4);
+
+    expect(queue.isEmpty()).to.be.true;
+    done();
+  })
+  it('dequeue beyond more than enqueued should just return undefined and operation as normal', function(done){
+    var queue = new Queue();
+    expect(queue.isEmpty()).to.be.true;
+    expect(queue.dequeue()).to.eql(undefined);
+    expect(queue.isEmpty()).to.be.true;
+    expect(queue.dequeue()).to.eql(undefined);
+    expect(queue.isEmpty()).to.be.true;
+    queue.enqueue(1)
+    expect(queue.isEmpty()).to.be.false
+    expect(queue.length).to.eql(1);;
+    expect(queue.dequeue()).to.eql(1);
+    done();
+  })
   // it('should output script if it is loaded', function(){
   //   let template = '{@bundleScript bundle="vendor" src="one.js"/}{@loadBundle bundle="vendor"/}{@renderScript /}';
   //   let output = '<script>$script(["one.js"],"vendor");</script>';

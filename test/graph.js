@@ -97,4 +97,18 @@ describe("Graph", function() {
     }, visited)
     done();
   })
+
+  it('should throw an exception if breadth function is called with something otehr than in or out', function(){
+    let node = new GraphNode("1", "abc");
+    expect(()=>{node.breadth("in", ()=>{})}).not.to.throw("direction can only be in or out")
+    expect(()=>{node.breadth("out", ()=>{})}).not.to.throw("direction can only be in or out")
+    expect(()=>{node.breadth("somethingelse", ()=>{})}).to.throw("direction can only be in or out")
+  });
+  it('should not walk itself it is in the visited list', function(done){
+    let node = new GraphNode("1", "abc");
+    node.breadth("in",(path)=>{
+      expect(path.length).to.eql(0);
+      done();
+    }, {"1":true});
+  });
 });

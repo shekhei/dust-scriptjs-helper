@@ -2,10 +2,24 @@ import {default as DepGraphNode} from "./graph";
 import {default as debugLog} from "debug";
 import {default as dust} from "dustjs-helpers";
 
-const debug = debugLog("dust-scriptjs-helper:index");
-
+const log = debugLog("dust-scriptjs-helper:index");
 const globalKey = "scriptsBlock"
 const globalKeyBundleless = "scriptsBlockBundleless"
+
+function logWithLevel(level, ...args) {
+  dust.log(args.join(" "), level);
+  log(...args);
+}
+
+function debug(...args) {
+  logWithLevel("DEBUG", ...args);
+}
+
+function error(chunk, helper, ...args) {
+  var newargs = ["@"+helper+":"].concat(args);
+  logWithLevel("ERROR", ...newargs)
+  chunk.setError(args.join(" "));
+}
 
 // {@bundleScript bundle="vendor" src="//cdn.bootcss.com/jquery/1.11.3/jquery.min.js"/}
 // {@bundleScript bundle="vendor" src="//cdn.bootcss.com/hammer.js/2.0.4/hammer.min.js"/}
@@ -26,13 +40,26 @@ const globalKeyBundleless = "scriptsBlockBundleless"
 
 dust.helpers.bundleScript = function(chunk, context, bodies, params) {
   var graph = getGraph(context);
-  var bundle = dust.helpers.tap(params.bundle, chunk, context);
+  var bundle = context.resolve(params.bundle);
   var src;
   if ( !params.src ) {
-    src = JSON.parse(dust.helpers.tap(bodies.block, chunk, context));
-
+    src = context.resolve(bodies.block);
+    if ( !src || !src.length) {
+      error(chunk, "bundleScript", "Either src or a body has to be provided");
+      return chunk;
+    }
+    try {
+      src = JSON.parse(src);
+    } catch(e) {
+      error(chunk, "bundleScript", "src has to be a valid json array");
+      return chunk;
+    }
+    if ( !Array.isArray(src)) {
+      error(chunk, "bundleScript", "body has to be an array");
+      return chunk;
+    }
   } else {
-    src = dust.helpers.tap(params.src, chunk, context);
+    src = context.resolve(params.src);
   }
   //TODO check if src is array
   var node = graph[bundle] = graph[bundle] || new DepGraphNode(bundle, []);
@@ -42,55 +69,61 @@ dust.helpers.bundleScript = function(chunk, context, bodies, params) {
       node.data.push(src);
   }
 
-  return chunk.write("");
+  return chunk;
 }
 
 dust.helpers.bundleDepends = function(chunk, context, bodies, params) {
   var graph = getGraph(context);
-  var bundle = dust.helpers.tap(params.bundle, chunk, context);
-  var dependsOn = dust.helpers.tap(params.on, chunk, context);
+  var bundle = context.resolve(params.bundle);
+  var dependsOn = context.resolve(params.on);
   var newcontext = context.push({__deps:[]});
-  var body = dust.helpers.tap(bodies.block, chunk, newcontext);
+  if ( bodies.block) {
+    var body = newcontext.resolve(bodies.block);
+  }
   if ( !bundle || !(dependsOn || newcontext.stack.head.__deps.length) ) {
-    throw "bundleDepends helper has to have 'bundle' parameter at dependencies defined either by 'on' parameter or @dependsOn helper";
+    error(chunk, "bundleDepends", "bundleDepends helper has to have 'bundle' parameter at dependencies defined either by 'on' parameter or @dependsOn helper");
+    return chunk;
   }
   var deps = newcontext.stack.head.__deps;
   if ( dependsOn) {
     deps.push(dependsOn);
   }
   bundle = graph[bundle] = graph[bundle] || new DepGraphNode(bundle, []);
+  var tDependsOn;
   for ( var i = 0; i < deps.length; i++ ) {
-    var dependsOn = deps[i];
-    dependsOn = graph[dependsOn] = graph[dependsOn] || new DepGraphNode(dependsOn, []);
-    bundle.addOut(dependsOn);
+    tDependsOn = deps[i];
+    tDependsOn = graph[tDependsOn] = graph[tDependsOn] || new DepGraphNode(tDependsOn, []);
+    bundle.addOut(tDependsOn);
   }
-  return chunk.write("");
+  return chunk;
 }
 
 dust.helpers.dependsOn = function(chunk, context, bodies, params) {
   if ( !context.stack.head.__deps ) {
-    throw "dependsOn can only be called within bundleDepends or script tag";
+    error(chunk, "dependsOn", "dependsOn can only be called within bundleDepends or script tag");
+    return chunk;
   }
-  var bundle = dust.helpers.tap(params.bundle, chunk, context);
-  if ( !bundle ) {
-    throw "dependsOn has to contain 'bundle' parameter";
+  if (!params.bundle) {
+    error(chunk, "dependsOn", "dependsOn has to contain 'bundle' parameter");
+    return chunk;
   }
+  var bundle = context.resolve(params.bundle);
 
   context.stack.head.__deps.push(bundle);
-  return chunk.write("");
+  return chunk;
 }
 
 dust.helpers.loadBundle = function(chunk, context, bodies, params) {
   // loadBundles has to be rendered, so add its dependencies to renderables
-  var bundle = dust.helpers.tap(params.bundle, chunk, context);
+  var bundle = context.resolve(params.bundle);
   var scriptDep = getScriptDepGlobal(context);
   scriptDep.__renderable = scriptDep.__renderable || [];
   scriptDep.__renderable.push(bundle);
-  return chunk.write("");
+  return chunk;
 }
 
 dust.helpers.scriptjs = function(chunk, context, bodies, params) {
-  var dependsOn = dust.helpers.tap(params.dependsOn, chunk, context);
+  var dependsOn = context.resolve(params.dependsOn);
   // scripts has to be rendered, so add its dependencies to renderables
   var scriptDep = getScriptDepGlobal(context);
   scriptDep.__renderable = scriptDep.__renderable || [];
@@ -101,7 +134,7 @@ dust.helpers.scriptjs = function(chunk, context, bodies, params) {
   scriptDep.__renderable.push(scriptId);
   var graph = getGraph(context);
   var newcontext = context.push({__deps:[]});
-  var body = dust.helpers.tap(bodies.block, chunk, newcontext);
+  var body = newcontext.resolve(bodies.block);
   var node = graph[scriptId] = graph[scriptId] || new DepGraphNode(scriptId, {type:"script", body});
 
   var deps = newcontext.stack.head.__deps;
@@ -109,14 +142,15 @@ dust.helpers.scriptjs = function(chunk, context, bodies, params) {
     deps.push(dependsOn);
   }
   if ( deps.length ) {
+    var tDependsOn;
     for ( var i = 0; i < deps.length; i++ ) {
-      var dependsOn = deps[i];
-      debug("script dependency added", scriptId, dependsOn);
-      dependsOn = graph[dependsOn] = graph[dependsOn] || new DepGraphNode(dependsOn, []);
-      node.addOut(dependsOn);
+      tDependsOn = deps[i];
+      debug("script dependency added", scriptId, tDependsOn);
+      tDependsOn = graph[tDependsOn] = graph[tDependsOn] || new DepGraphNode(tDependsOn, []);
+      node.addOut(tDependsOn);
     }
   }
-  return chunk.write("");
+  return chunk;
 }
 function getScriptDepGlobal(context) {
   var global = context.global[globalKey] = context.global[globalKey] || {};
@@ -127,37 +161,39 @@ function getGraph(context) {
   var graph = global.graph = global.graph || {};
   return graph;
 }
+
 dust.helpers.renderScript = function(chunk, context, bodies, params) {
   var scriptDep = getScriptDepGlobal(context);
   var graph = getGraph(context);
   // debug("rendering script");
   if ( !(scriptDep.__renderable && scriptDep.__renderable.length) ) {
     // debug("non renderable");
-      return chunk.write("");
+      return chunk;
   }
   var visited = {}; // this can help cache the previously visited nodes, so we dont end up going through them again
   return chunk.map((chunk) => {
+    function pathRender(path){
+      // TODO, flatten the paths
+      for ( var i = path.length-1; i >= 0; i-- ) {
+        // if dep has length, then print ready
+        var el = path[i];
+        // debug("rendering", path[i]);
+        if ( el[1].length ) {
+          renderReadyScript(chunk, el);
+        } else if ( el[0].data.type === "script" ){
+          renderScript(chunk, el);
+        } else {
+          renderModuleLoader(chunk, el);
+        }
+      }
+      // chunk.map
+      // debug("path", path);
+    }
     // debug("we have reached here");
     chunk.write("<script>");
     for ( var i = 0; i < scriptDep.__renderable.length; i++ ) {
       // debug("rendering", scriptDep.__renderable[i]);
-      graph[scriptDep.__renderable[i]].breadth('out', (path)=>{
-        // TODO, flatten the paths
-        for ( var i = path.length-1; i >= 0; i-- ) {
-          // if dep has length, then print ready
-          var el = path[i];
-          // debug("rendering", path[i]);
-          if ( el[1].length ) {
-            renderReadyScript(chunk, el);
-          } else if ( el[0].data.type === "script" ){
-            renderScript(chunk, el);
-          } else {
-            renderModuleLoader(chunk, el);
-          }
-        }
-        // chunk.map
-        // debug("path", path);
-      },visited);
+      graph[scriptDep.__renderable[i]].breadth('out', pathRender ,visited);
     }
     chunk.write("</script>");
     return chunk.end();

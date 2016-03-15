@@ -36,6 +36,11 @@ describe("simple inputs should match simple outputs", function() {
     let output = '<script>$script(["one.js"],"vendor");</script>';
     return expect(matcher(template, {}, output)).to.eventually.equal(output);
   })
+  it('should accept json array for bundleScript', function(){
+    let template = '{@bundleScript bundle="vendor"}["one.js"]{/bundleScript}{@loadBundle bundle="vendor"/}{@renderScript /}';
+    let output = '<script>$script(["one.js"],"vendor");</script>';
+    return expect(matcher(template, {}, output)).to.eventually.equal(output);
+  })
   it('should output script if it is used by script', function(){
     let template = [
       '{@bundleScript bundle="vendor" src="one.js"/}',

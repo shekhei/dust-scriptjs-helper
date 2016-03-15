@@ -124,8 +124,7 @@ describe("complex cases", function() {
       '{@bundleScript bundle="one" src="one.js"/}',
       '{@bundleScript bundle="two" src="two.js"/}',
       '{@bundleScript bundle="three" src="three.js"/}',
-      '{@bundleDepends bundle="three"}',
-      '{@dependsOn bundle="one"/}',
+      '{@bundleDepends bundle="three" on="one"}',
       '{@dependsOn bundle="two"/}',
       '{/bundleDepends}',
       '{@scriptjs}',
@@ -137,6 +136,41 @@ describe("complex cases", function() {
       '<script>',
       '$script(["two.js"],"two");',
       '$script.ready("two",function(){',
+      '});',
+      '</script>'
+    ].join("");
+    return expect(matcher(template, {}, output)).to.eventually.equal(output);
+  })
+  it('should allow bundleDepends to be defined before bundleScript', function(){
+    let template = [
+      '{@bundleDepends bundle="two" on="one"}',
+      '{/bundleDepends}',
+      '{@bundleScript bundle="one" src="one.js"/}',
+      '{@bundleScript bundle="two" src="two.js"/}',
+      '{@loadBundle bundle="two"/}',
+      '{@renderScript /}'
+    ].join("");
+    let output = [
+      '<script>',
+      '$script(["one.js"],"one");',
+      '$script.ready("one",function(){',
+      '$script(["two.js"],"two");',
+      '});',
+      '</script>'
+    ].join("");
+    return expect(matcher(template, {}, output)).to.eventually.equal(output);
+  })
+  it('should allow script with dependencies to be defined before bundleScript', function(){
+    let template = [
+      '{@scriptjs dependsOn="one"}var a=1;',
+      '{/scriptjs}',
+      '{@bundleScript bundle="one" src="one.js"/}',
+      '{@renderScript /}'
+    ].join("");
+    let output = [
+      '<script>',
+      '$script(["one.js"],"one");',
+      '$script.ready("one",function(){var a=1;',
       '});',
       '</script>'
     ].join("");
