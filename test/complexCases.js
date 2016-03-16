@@ -107,8 +107,8 @@ describe("complex cases", function() {
     ].join("");
     let output = [
       '<script>',
-      '$script(["two.js"],"two");',
       '$script(["one.js"],"one");',
+      '$script(["two.js"],"two");',
       '$script.ready(["one","two"],function(){',
       '$script(["three.js"],"three");',
       '});',

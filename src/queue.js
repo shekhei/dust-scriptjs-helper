@@ -9,6 +9,7 @@ export default class Queue {
     }
     this.data = [];
     this.data.length = size;
+    this.internalLength = 0;
     this.begin = 0;
     this.end = 0;
     this._length = 0;
@@ -28,6 +29,9 @@ export default class Queue {
       debug("internal size grew to ", this._length, "grew beyond internal structure size", this.data.length);
       this.data.length = Math.floor((this.data.length+1) *1.3);
       debug("growing internal structure to ", this.data.length);
+    }
+    if (this.end >= this.internalLength ) {
+      this.internalLength = this.end+1;
     }
     this.data[this.end] = el;
     this.end++;
@@ -49,7 +53,7 @@ export default class Queue {
       debug("dequeue now the data looks like", this.data, "begins at", this.begin, "ends at", this.end, "and length is", this._length);
       return data;
     }
-    if ( this.begin >= this.data.length ) {
+    if ( this.begin >= this.internalLength ) { // cause it might have grown
       this.begin = 0;
     }
     // debug("dequeuing: now the data looks like", this.data, "and length is", this._length, "and it starts from", this.begin);

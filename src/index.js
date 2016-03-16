@@ -170,7 +170,6 @@ dust.helpers.renderScript = function(chunk, context, bodies, params) {
     // debug("non renderable");
       return chunk;
   }
-  var visited = {}; // this can help cache the previously visited nodes, so we dont end up going through them again
   return chunk.map((chunk) => {
     function pathRender(path){
       // TODO, flatten the paths
@@ -178,7 +177,7 @@ dust.helpers.renderScript = function(chunk, context, bodies, params) {
         // if dep has length, then print ready
         var el = path[i];
         // debug("rendering", path[i]);
-        if ( el[1].length ) {
+        if ( el[1].length ) { // it is dependent on another script, flatten them?
           renderReadyScript(chunk, el);
         } else if ( el[0].data.type === "script" ){
           renderScript(chunk, el);
@@ -191,10 +190,15 @@ dust.helpers.renderScript = function(chunk, context, bodies, params) {
     }
     // debug("we have reached here");
     chunk.write("<script>");
-    for ( var i = 0; i < scriptDep.__renderable.length; i++ ) {
       // debug("rendering", scriptDep.__renderable[i]);
-      graph[scriptDep.__renderable[i]].breadth('out', pathRender ,visited);
+      // reverse the __renderable map, since pathRender does it in reverse
+    var nodes = [];
+    for ( var i = scriptDep.__renderable.length-1; i >= 0; i-- ) {
+      nodes.push(graph[scriptDep.__renderable[i]]);
     }
+    DepGraphNode.breadth(nodes, 'out', pathRender);
+
+    // graph[scriptDep.__renderable[i]].breadth('out', pathRender ,visited);
     chunk.write("</script>");
     return chunk.end();
   });

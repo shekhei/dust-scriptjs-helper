@@ -58,6 +58,18 @@ describe("Queue", function() {
     expect(queue.isEmpty()).to.be.true;
     done();
   })
+  it('should support slightly more complex case2', function(done){
+    var queue = new Queue();
+    queue.enqueue(1);
+    queue.enqueue(2);
+    expect(queue.dequeue()).to.eql(1);
+    queue.enqueue(3);
+    queue.enqueue(4);
+    expect(queue.dequeue()).to.eql(2);
+    expect(queue.dequeue()).to.eql(3);
+    expect(queue.dequeue()).to.eql(4);
+    done();
+  })
 
   it('should support enqueuing by an array', function(done){
     var queue = new Queue();
