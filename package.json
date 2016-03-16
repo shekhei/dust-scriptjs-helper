@@ -1,6 +1,6 @@
 {
   "name": "dust-scriptjs-helper",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Just a group of simple dustjs helpers for loading with scriptjs",
   "main": "dist/index.js",
   "scripts": {
