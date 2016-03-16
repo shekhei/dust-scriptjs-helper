@@ -19,9 +19,12 @@ addons:
     - g++-4.8
   code_climate:
     repo_token: 4c3d3b14a544b2fbd7ec93c32a088807466bb578eff6dca7be7b8a995ca570dc
+before_deploy:
+  - npm run build
 deploy:
   provider: npm
   email: shekhei@gmail.com
+  skip_cleanup: true
   api_key:
     secure: mzGJhtkJs0ps5DKNS5/d3AZHbaTJE1sbq+Ps/PN9slq/Jy7bB11GtJRJXV9/P5RO2wGoMbfbZWM1ZVqkXXEhqSbGiDvLYRbYsz/sW9mu7fbsuddPgDugP8uBV4X5PYbF09oo+ozpk0z+sN9MXSnNoNAH1XKVgya2z9ASyumQHltKaCEPCcEW7ngTU04ixQuKHpFkGMLe7LUhrCvme2IG+8xSzqK0tcFDiu1qD+iXuyI9157gKfg5YL5dVyS2R8YFcIsuG+ATBYmpb8035zwt/CUJdfV6S3d0oe0amQ53Chh8F9X7D8IlmcOlTNe/f/Bmh5sVsXFIMprNRKyOrsWSsM01ITnCaTN5D22oNLVZgc0gj8ZKKmPuAe+9u35HEJjHd6vD+Bb3jNtPDpSr/22U3+fMlw6lD3x1KhEiv8ofF/Zu8l5czrvfq+qS6Js2ptR14Wkd8S+QJt5FLtMnveVVtczQpVmYCqVhy3VIQeD08ouf2XGY/OesAMoYHiS5Iub8NhaYEXW/4P/BSzALnQLt/LFCblMKzRCCrI3CpyTjk6IWT94EqHzfFJhppRAwVkK0HqT9jxOdWHSsga9Uz2DqUBTPl0f4wFoUVez4juisHO6IwkZttMqncp1WuiUq7mMwqzm2vs4+/knRYTDufMZDCbQ0jp8IE92Cadrqo9lGFPg=
   on:
