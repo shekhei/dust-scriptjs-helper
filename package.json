@@ -39,6 +39,7 @@
     "dustjs-helpers": "^1.7.0"
   },
   "dependencies": {
-    "debug": "^2.2.0"
+    "debug": "^2.2.0",
+    "eventemitter2": "^1.0.0"
   }
 }
